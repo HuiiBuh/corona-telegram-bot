@@ -47,29 +47,18 @@ class CovidDatabase(metaclass=Singleton):
         return_list.sort(key=lambda k: k.name)
         return return_list
 
-    async def get_district_by_id(self, ags: int) -> Districts:
-        if len(str(ags)) < 5:
-            ags = f"0{ags}"
+    async def get_district_by_id(self, ags: str) -> Districts:
+        return (await self.districts).data[ags]
 
-        return (await self.districts).data[str(ags)]
-
-    async def get_ordered_district_by_id(self, ags_list: [int]) -> [Districts]:
+    async def get_ordered_district_by_id(self, ags_list: [str]) -> [Districts]:
         return_list = []
         district_dict = (await self.districts).data
         for ags in ags_list:
-            ags = CovidDatabase.transform_ags(ags)
             if ags in district_dict:
                 return_list.append(district_dict[ags])
 
         return_list.sort(key=lambda k: k.name)
         return return_list
-
-    @staticmethod
-    def transform_ags(ags: int) -> str:
-        if len(str(ags)) < 5:
-            ags = f"0{ags}"
-
-        return str(ags)
 
     def initialize(self) -> None:
         self._api_client = ApiClient.create()

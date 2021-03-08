@@ -10,12 +10,13 @@ from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
 
 from helpers.singleton import Singleton
+from settings import SETTINGS
 
 
 @dataclass
 class User:
     id: int
-    districts: List[int] = field(default_factory=lambda: [])
+    districts: List[str] = field(default_factory=lambda: [])
     notification_active: bool = True
 
 
@@ -57,7 +58,12 @@ class UserDatabase(metaclass=Singleton):
 
     def save(self) -> None:
         with open(self.file_name, "w") as file:
-            file.write(self._data.json())
+            if SETTINGS.production:
+                file.write(self._data.json())
+            else:
+                file.write(
+                    json.dumps(json.loads(self._data.json()), indent=2, sort_keys=True)
+                )
 
     def add_user(self, user_id: int, districts=None, notification_active=True) -> None:
         if self._data.has(user_id):

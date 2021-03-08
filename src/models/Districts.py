@@ -6,7 +6,7 @@ from models.Shared import Meta, Delta
 
 
 class Districts(BaseModel):
-    ags: int
+    ags: str
     name: str
     county: str
     state: str

@@ -44,7 +44,7 @@ async def show_districts(query: CallbackQuery, callback_data: dict):
 
 
 async def add_district(query: CallbackQuery, callback_data: dict):
-    district_id = int(callback_data["data"])
+    district_id = callback_data["data"]
 
     user = user_db.get_user(query.from_user.id)
     user.districts = list({district_id, *user.districts})
@@ -54,7 +54,7 @@ async def add_district(query: CallbackQuery, callback_data: dict):
 
 
 async def remove_district(query: CallbackQuery, callback_data: dict):
-    district_id = int(callback_data["data"])
+    district_id = callback_data["data"]
 
     user = user_db.get_user(query.from_user.id)
     user.districts = list(filter(lambda i: i != district_id, user.districts))
