@@ -55,6 +55,9 @@ async def settings(message: Union[types.Message, types.CallbackQuery]):
                                    callback_data=settings_callback.new(setting="show_notification", data="None")),
     )
     keyboard_markup.row(
+        types.InlineKeyboardButton("View on Github", url="https://github.com/HuiiBuh/corona-telegram-bot"),
+    )
+    keyboard_markup.row(
         types.InlineKeyboardButton("Close settings",
                                    callback_data=settings_callback.new(setting="close_settings", data="None")),
     )
