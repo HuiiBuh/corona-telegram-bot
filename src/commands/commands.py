@@ -54,8 +54,13 @@ async def settings(message: Union[types.Message, types.CallbackQuery]):
         types.InlineKeyboardButton("Manage notifications",
                                    callback_data=settings_callback.new(setting="show_notification", data="None")),
     )
+    keyboard_markup.row(
+        types.InlineKeyboardButton("Close settings",
+                                   callback_data=settings_callback.new(setting="close_settings", data="None")),
+    )
 
     if isinstance(message, types.Message):
         await message.answer("Modify your settings:", reply_markup=keyboard_markup)
     elif isinstance(message, types.CallbackQuery):
+        await message.answer()
         await message.message.edit_text("Modify your settings:", reply_markup=keyboard_markup)

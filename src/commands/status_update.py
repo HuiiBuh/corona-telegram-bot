@@ -1,6 +1,7 @@
 from aiogram.types import ParseMode
 
 from globals import bot
+from models.Districts import Districts
 from storage.covid_database import CovidDatabase
 from storage.user_database import UserDatabase, User
 
@@ -22,16 +23,12 @@ async def send_district_update(user: User, scip_district_check=True):
                                                "Go into /settings to subscribe to districts you want information from "
                                                "or /start to see which commands are available.", ParseMode.MARKDOWN)
 
-    for district in user.districts:
+    district_list = await covid_db.get_ordered_district_by_id(user.districts)
+    for district in district_list:
         await send_district(user, district)
 
 
-async def send_district(user: User, district_id: int):
-    if len(str(district_id)) < 5:
-        district_id = f"0{district_id}"
-
-    district = (await covid_db.districts).data
-    district = district[str(district_id)]
+async def send_district(user: User, district: Districts):
     message = f"""
     *{district.name}:*
     - Cases per Hundred Thousand: _{round(district.cases_per100_k)}_
