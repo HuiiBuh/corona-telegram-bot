@@ -21,6 +21,6 @@ if __name__ == "__main__":
         dispatcher.register_message_handler(**handler)
 
     for handler in callback_handler_list:
-        dispatcher.register_callback_query_handler(**handler)
+        dispatcher.register_callback_query_handler(handler[0], *handler[1])
 
     executor.start_polling(dispatcher)
