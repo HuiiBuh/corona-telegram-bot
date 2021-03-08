@@ -1,3 +1,5 @@
+from typing import Union
+
 from aiogram import types
 from aiogram.types import ParseMode
 from aiogram.utils.callback_data import CallbackData
@@ -38,19 +40,22 @@ async def update(message: types.Message):
     await send_district_update(user)
 
 
-async def settings(message: types.Message):
+async def settings(message: Union[types.Message, types.CallbackQuery]):
     keyboard_markup = types.InlineKeyboardMarkup()
     keyboard_markup.row(
         types.InlineKeyboardButton("Subscribe to District",
-                                   callback_data=settings_callback.new(setting="subscribe_state", data="None")),
+                                   callback_data=settings_callback.new(setting="show_states", data="None")),
     )
     keyboard_markup.row(
         types.InlineKeyboardButton("Unsubscribe from Districts",
-                                   callback_data=settings_callback.new(setting="unsubscribe_state", data="None")),
+                                   callback_data=settings_callback.new(setting="show_subscriptions", data="None")),
     )
     keyboard_markup.row(
         types.InlineKeyboardButton("Manage notifications",
-                                   callback_data=settings_callback.new(setting="notification", data="None")),
+                                   callback_data=settings_callback.new(setting="show_notification", data="None")),
     )
 
-    await message.answer("Modify your settings:", reply_markup=keyboard_markup)
+    if isinstance(message, types.Message):
+        await message.answer("Modify your settings:", reply_markup=keyboard_markup)
+    elif isinstance(message, types.CallbackQuery):
+        await message.message.edit_text("Modify your settings:", reply_markup=keyboard_markup)

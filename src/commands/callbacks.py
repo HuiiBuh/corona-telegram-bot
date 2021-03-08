@@ -1,45 +1,79 @@
-from aiogram import types
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.callback_data import CallbackData
 
 from storage import UserDatabase, CovidDatabase
 
 user_db = UserDatabase.create()
 covid_db = CovidDatabase()
-
 settings_callback = CallbackData("settings", "setting", "data")
 
 
-async def subscribe_state(query: types.CallbackQuery):
-    keyboard_markup = types.InlineKeyboardMarkup()
+async def show_states(query: CallbackQuery):
+    buttons = InlineKeyboardMarkup()
     for state in await covid_db.get_sorted_state_list():
-        keyboard_markup.row(
-            types.InlineKeyboardButton(state.name,
-                                       callback_data=settings_callback.new(setting=f"subscribe_district",
-                                                                           data=state.name))
+        buttons.row(
+            InlineKeyboardButton(state.name,
+                                 callback_data=settings_callback.new(setting=f"show_districts", data=state.name))
         )
-    await query.message.edit_text("Select a state", reply_markup=keyboard_markup)
+    buttons.row(
+        InlineKeyboardButton(
+            "Back", callback_data=settings_callback.new(setting="settings", data="None"))
+    )
+    await query.message.edit_text("Select the state the district you want to get get information about is in.",
+                                  reply_markup=buttons)
 
 
-async def subscribe_district(query: types.CallbackQuery, callback_data: dict):
-    keyboard_markup = types.InlineKeyboardMarkup()
+async def show_districts(query: CallbackQuery, callback_data: dict):
+    buttons = InlineKeyboardMarkup()
 
     state_name = callback_data["data"]
     districts = await covid_db.get_district_by_state_name(state_name)
 
     for district in districts:
-        keyboard_markup.row(
-            types.InlineKeyboardButton(district.name,
-                                       callback_data=settings_callback.new(setting="add_district",
-                                                                           data=district.ags))
+        buttons.row(
+            InlineKeyboardButton(
+                district.name, callback_data=settings_callback.new(setting="add_district", data=district.ags))
         )
-    await query.message.edit_text("Select a district", reply_markup=keyboard_markup)
+    buttons.row(
+        InlineKeyboardButton(
+            "Back", callback_data=settings_callback.new(setting="show_states", data="None"))
+    )
+    await query.message.edit_text("Select the district you want to get updates from.", reply_markup=buttons)
 
 
-async def subscribe_add_district(query: types.CallbackQuery, callback_data: dict):
+async def add_district(query: CallbackQuery, callback_data: dict):
     district_id = int(callback_data["data"])
 
     user = user_db.get_user(query.from_user.id)
     user.districts = list({district_id, *user.districts})
     user_db.save()
 
-    await query.answer("Successfully subscribed to district")
+    await query.answer("Successfully subscribed to district.")
+
+
+async def remove_district(query: CallbackQuery, callback_data: dict):
+    district_id = int(callback_data["data"])
+
+    user = user_db.get_user(query.from_user.id)
+    user.districts = list(filter(lambda i: i != district_id, user.districts))
+    user_db.save()
+
+    await show_subscriptions(query)
+
+
+async def show_subscriptions(query: CallbackQuery):
+    buttons = InlineKeyboardMarkup()
+
+    user = user_db.get_user(query.from_user.id)
+    for district_id in user.districts:
+        district = await covid_db.get_district_by_id(district_id)
+        buttons.row(
+            InlineKeyboardButton(district.name,
+                                 callback_data=settings_callback.new("remove_district", data=district_id))
+        )
+
+    buttons.row(
+        InlineKeyboardButton(
+            "Back", callback_data=settings_callback.new(setting="settings", data="None"))
+    )
+    await query.message.edit_text("Click on any of these districts to unsubscribe from them", reply_markup=buttons)

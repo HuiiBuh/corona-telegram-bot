@@ -47,6 +47,12 @@ class CovidDatabase(metaclass=Singleton):
         return_list.sort(key=lambda k: k.name)
         return return_list
 
+    async def get_district_by_id(self, ags: int) -> Districts:
+        if len(str(ags)) < 5:
+            ags = f"0{ags}"
+
+        return (await self.districts).data[str(ags)]
+
     def initialize(self) -> None:
         self._api_client = ApiClient.create()
 
