@@ -133,7 +133,9 @@ dmypy.json
 
 # pytype static type analyzer
 .pytype/
+user_db.json
 
 # Cython debug symbols
 cython_debug/
 out
+/test-snippets.py

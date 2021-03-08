@@ -21,8 +21,11 @@ class ApiClient:
 
     def create_client(self) -> None:
         if not self._client_session:
-            self._client_session = ClientSession(connector=self._connector, timeout=self._timeout,
-                                                 cookie_jar=DummyCookieJar())
+            self._client_session = ClientSession(
+                connector=self._connector,
+                timeout=self._timeout,
+                cookie_jar=DummyCookieJar()
+            )
 
     async def close_client(self) -> None:
         if self._client_session:
@@ -40,6 +43,11 @@ class ApiClient:
     async def get_germany(self) -> GermanyResponse:
         response = await self._get("germany")
         return GermanyResponse(**response)
+
+    async def get_district_map(self) -> bytes:
+        async with self._client_session.get(f"{self.base_url}map/districts") as request:
+            request.raise_for_status()
+            return await request.read()
 
     async def _get(self, path: str) -> Dict:
         if not self._client_session:
