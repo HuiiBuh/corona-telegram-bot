@@ -8,6 +8,7 @@ from helpers.singleton import Singleton
 from models.Districts import DistrictsResponse
 from models.Germany import GermanyResponse
 from models.States import StatesResponse
+from settings import SETTINGS
 
 
 class ApiClient:
@@ -65,6 +66,6 @@ class ApiClient:
 
     @staticmethod
     def create() -> ApiClient:
-        client = ApiClient("https://api.corona-zahlen.org/", 10, 10)
+        client = ApiClient(SETTINGS.covid_api_url, request_timeout=20, request_limit=100)
         client.create_client()
         return client

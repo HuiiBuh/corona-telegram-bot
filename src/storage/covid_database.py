@@ -10,22 +10,22 @@ class CovidDatabase(metaclass=Singleton):
     _api_client: ApiClient
 
     @property
-    @cache("*:*:10")
+    @cache("*:60:00")
     async def states(self) -> StatesResponse:
         return await self._api_client.get_states()
 
     @property
-    @cache("*:*:10")
+    @cache("*:60:00")
     async def districts(self) -> DistrictsResponse:
         return await self._api_client.get_districts()
 
     @property
-    @cache("*:*:10")
+    @cache("*:60:00")
     async def germany(self) -> GermanyResponse:
         return await self._api_client.get_germany()
 
     @property
-    @cache("*:*:50")
+    @cache("*:60:00")
     async def map(self) -> bytes:
         return await self._api_client.get_district_map()
 
@@ -38,7 +38,7 @@ class CovidDatabase(metaclass=Singleton):
         return_list.sort(key=lambda s: s.name)
         return return_list
 
-    @cache("*:*:50")
+    @cache("*:60:00")
     async def get_district_by_state_name(self, state_name: str) -> [Districts]:
         return_list = []
         for district in (await self.districts).data.values():

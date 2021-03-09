@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram.types import ParseMode
 
 from globals import bot
@@ -41,7 +43,11 @@ async def send_country_update(user: User) -> None:
     prepare_message = await bot.send_message(user.id, "Preparing image...")
 
     germany = await covid_db.germany
-    covid_map = await covid_db.map
+    try:
+        covid_map = await covid_db.map
+    except asyncio.exceptions.TimeoutError:
+        covid_map = None
+        pass
     message = f"""
     *Germany:*
     - R-value: _{round(germany.r.value)}_
@@ -49,5 +55,9 @@ async def send_country_update(user: User) -> None:
     - Week Incidence: _{round(germany.week_incidence)}_
     """.replace("-", "\\-")
 
-    await bot.send_photo(user.id, covid_map, message, ParseMode.MARKDOWN_V2)
-    await bot.delete_message(user.id, prepare_message.message_id)
+    if covid_map:
+        await bot.send_photo(user.id, covid_map, message, ParseMode.MARKDOWN_V2)
+        await bot.delete_message(user.id, prepare_message.message_id)
+    else:
+        await prepare_message.edit_text("Could not collect the image")
+        await bot.send_message(user.id, message, ParseMode.MARKDOWN_V2)
