@@ -108,4 +108,4 @@ class UserDatabase(metaclass=Singleton):
 
     @staticmethod
     def create() -> UserDatabase:
-        return UserDatabase("database/user_db.json")
+        return UserDatabase(f"{SETTINGS.db_location}/user_db.json")
