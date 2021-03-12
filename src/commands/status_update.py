@@ -32,7 +32,7 @@ async def send_district_update(user: User, scip_district_check=True):
 
 async def send_district(user: User, district: Districts):
     message = f"""
-    *{district.name}:*
+    *{district.county}:*
     - R-value: _{await covid_db.calculate_r(district.ags)}_
     - Cases per Hundred Thousand: _{round(district.cases_per100_k)}_
     - Week Incidence: _{round(district.week_incidence)}_

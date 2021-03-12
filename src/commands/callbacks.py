@@ -33,7 +33,7 @@ async def show_districts(query: CallbackQuery, callback_data: dict):
     for district in districts:
         buttons.row(
             InlineKeyboardButton(
-                district.name, callback_data=settings_callback.new(setting="add_district", data=district.ags))
+                district.county, callback_data=settings_callback.new(setting="add_district", data=district.ags))
         )
     buttons.row(
         InlineKeyboardButton(
@@ -71,7 +71,7 @@ async def show_subscriptions(query: CallbackQuery):
     district_list = await covid_db.get_ordered_district_by_ids(user.districts)
     for district in district_list:
         buttons.row(
-            InlineKeyboardButton(district.name,
+            InlineKeyboardButton(district.county,
                                  callback_data=settings_callback.new("remove_district", data=district.ags))
         )
 

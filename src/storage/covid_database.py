@@ -98,13 +98,13 @@ class CovidDatabase(metaclass=Singleton):
 
         pyplot.xticks(x, week_ticks)
 
-        pyplot.plot(x, y, color="blue")
+        pyplot.plot(x, y, color="black")
 
         if show_limits:
-            pyplot.plot(x, [50] * len(y), color="orange")
+            pyplot.plot(x, [50] * len(y), color="#b9b922")
 
             if max(y) > 90:
-                pyplot.plot(x, [100] * len(y), color="red")
+                pyplot.plot(x, [100] * len(y), color="lightcoral")
 
         pyplot.ylabel(y_label)
         pyplot.xlabel(x_label)
