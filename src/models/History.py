@@ -42,7 +42,7 @@ class DistrictHistoryCases(BaseModel):
 
 
 class InternalHistoryDistrictCasesResponse(BaseModel):
-    data: Dict[str, DistrictHistoryIncidence]
+    data: Dict[str, DistrictHistoryCases]
     meta: Meta
 
 

@@ -7,7 +7,8 @@ from aiohttp import ClientSession, TCPConnector, ClientTimeout, DummyCookieJar
 from helpers.singleton import Singleton
 from models.Districts import DistrictsResponse
 from models.Germany import GermanyResponse
-from models.History import GermanHistoryResponse, InternalHistoryDistrictCasesResponse, HistoryDistrictIncidenceResponse
+from models.History import GermanHistoryResponse, InternalHistoryDistrictCasesResponse, \
+    HistoryDistrictIncidenceResponse, HistoryDistrictCasesResponse, InternalHistoryDistrictIncidenceResponse
 from models.States import StatesResponse
 from settings import SETTINGS
 
@@ -49,16 +50,16 @@ class ApiClient:
     async def get_district_map(self) -> bytes:
         return await self._get("map/districts")
 
-    async def get_district_cases_history(self, district_id: str, days: int) -> HistoryDistrictIncidenceResponse:
+    async def get_district_cases_history(self, district_id: str, days: int) -> HistoryDistrictCasesResponse:
         history = await self._get(f"districts/{district_id}/history/cases/{days}")
         history_object = InternalHistoryDistrictCasesResponse(**history)
         keys = list(history_object.data.keys())
         data = history_object.data[keys[0]]
-        return HistoryDistrictIncidenceResponse(data=data.history, ags=data.ags, name=data.name)
+        return HistoryDistrictCasesResponse(data=data.history, ags=data.ags, name=data.name)
 
     async def get_district_incidence_history(self, district_id: str, days: int) -> HistoryDistrictIncidenceResponse:
         history = await self._get(f"districts/{district_id}/history/incidence/{days}")
-        history_object = InternalHistoryDistrictCasesResponse(**history)
+        history_object = InternalHistoryDistrictIncidenceResponse(**history)
         keys = list(history_object.data.keys())
         data = history_object.data[keys[0]]
         return HistoryDistrictIncidenceResponse(data=data.history, ags=data.ags, name=data.name)

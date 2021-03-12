@@ -5,7 +5,7 @@ from matplotlib import pyplot
 from helpers.singleton import Singleton
 from models.Districts import DistrictsResponse, Districts
 from models.Germany import GermanyResponse
-from models.History import HistoryDistrictIncidenceResponse
+from models.History import HistoryDistrictIncidenceResponse, HistoryDistrictCasesResponse
 from models.States import StatesResponse, States
 from storage.cache import cache
 from .api_client import ApiClient
@@ -34,6 +34,11 @@ class CovidDatabase(metaclass=Singleton):
     async def get_district_incidence_history(self, district_id: str,
                                              days: int = 42) -> HistoryDistrictIncidenceResponse:
         return await self._api_client.get_district_incidence_history(district_id, days)
+
+    @cache("*:60:00")
+    async def get_district_cases_history(self, district_id: str,
+                                         days: int = 42) -> HistoryDistrictCasesResponse:
+        return await self._api_client.get_district_cases_history(district_id, days)
 
     @cache("*:60:00")
     async def german_history(self, days: int = 42):
@@ -115,10 +120,9 @@ class CovidDatabase(metaclass=Singleton):
         return buf.read()
 
     async def calculate_r(self, district_id: str, generation_time=7) -> float:
-        # TODO cases
-        district_history = (await self.get_district_incidence_history(district_id))
+        district_history = (await self.get_district_cases_history(district_id))
         district_history.data.reverse()
-        district_history = list(map(lambda x: x.week_incidence, district_history.data))
+        district_history = list(map(lambda x: x.cases, district_history.data))
 
         # Ignore the last four days
         relevant_data = district_history[4:]
@@ -129,7 +133,7 @@ class CovidDatabase(metaclass=Singleton):
             new_infections += relevant_data[i]
             old_infections += relevant_data[i + generation_time]
 
-        return round(new_infections / old_infections, 3)
+        return round(new_infections / old_infections, 2)
 
     def initialize(self) -> None:
         self._api_client = ApiClient.create()
