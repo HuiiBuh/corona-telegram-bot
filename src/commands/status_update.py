@@ -1,6 +1,7 @@
 import asyncio
+from io import BytesIO
 
-from aiogram.types import ParseMode
+from aiogram.types import ParseMode, MediaGroup, InputMediaPhoto
 
 from globals import bot
 from models.Districts import Districts
@@ -44,12 +45,12 @@ async def send_district(user: User, district: Districts):
 async def send_country_update(user: User) -> None:
     prepare_message = await bot.send_message(user.id, "Preparing image...")
 
-    germany = await covid_db.germany()
     try:
         covid_map = await covid_db.map()
     except asyncio.exceptions.TimeoutError:
         covid_map = None
-        pass
+
+    germany = await covid_db.germany()
     message = f"""
     *Germany:*
     - R-value: _{round(germany.r.value, 2)}_
@@ -57,9 +58,16 @@ async def send_country_update(user: User) -> None:
     - Week Incidence: _{round(germany.week_incidence)}_
     """.replace("-", "\\-").replace(".", "\\.")
 
+    media = MediaGroup()
+
+    graph = await covid_db.get_incidence_plot()
+    photo = InputMediaPhoto(BytesIO(graph), message, ParseMode.MARKDOWN_V2)
+    media.attach(photo)
+
     if covid_map:
-        await bot.send_photo(user.id, covid_map, message, ParseMode.MARKDOWN_V2)
-        await bot.delete_message(user.id, prepare_message.message_id)
+        media.attach_photo(InputMediaPhoto(BytesIO(covid_map)))
+        await prepare_message.delete()
     else:
         await prepare_message.edit_text("Could not collect the image")
-        await bot.send_message(user.id, message, ParseMode.MARKDOWN_V2)
+
+    await bot.send_media_group(user.id, media=media)

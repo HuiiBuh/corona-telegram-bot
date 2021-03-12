@@ -53,6 +53,6 @@ class HistoryDistrictCasesResponse(BaseModel):
 
 
 # Germany cases history
-class GermanHistoryResponse(BaseModel):
+class HistoryGermanIncidenceResponse(BaseModel):
     data: List[HistoryIncidenceItem]
     meta: Meta

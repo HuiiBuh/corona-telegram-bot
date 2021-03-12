@@ -7,7 +7,7 @@ from aiohttp import ClientSession, TCPConnector, ClientTimeout, DummyCookieJar
 from helpers.singleton import Singleton
 from models.Districts import DistrictsResponse
 from models.Germany import GermanyResponse
-from models.History import GermanHistoryResponse, InternalHistoryDistrictCasesResponse, \
+from models.History import HistoryGermanIncidenceResponse, InternalHistoryDistrictCasesResponse, \
     HistoryDistrictIncidenceResponse, HistoryDistrictCasesResponse, InternalHistoryDistrictIncidenceResponse
 from models.States import StatesResponse
 from settings import SETTINGS
@@ -64,9 +64,9 @@ class ApiClient:
         data = history_object.data[keys[0]]
         return HistoryDistrictIncidenceResponse(data=data.history, ags=data.ags, name=data.name)
 
-    async def get_german_history(self, days: int):
+    async def get_german_history(self, days: int) -> HistoryGermanIncidenceResponse:
         history = await self._get(f"germany/history/incidence/{days}")
-        return GermanHistoryResponse(**history)
+        return HistoryGermanIncidenceResponse(**history)
 
     async def _get(self, path: str) -> Union[dict, bytes]:
         if not self._client_session:

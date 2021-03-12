@@ -5,7 +5,8 @@ from matplotlib import pyplot
 from helpers.singleton import Singleton
 from models.Districts import DistrictsResponse, Districts
 from models.Germany import GermanyResponse
-from models.History import HistoryDistrictIncidenceResponse, HistoryDistrictCasesResponse
+from models.History import HistoryDistrictIncidenceResponse, HistoryDistrictCasesResponse, \
+    HistoryGermanIncidenceResponse
 from models.States import StatesResponse, States
 from storage.cache import cache
 from .api_client import ApiClient
@@ -41,7 +42,7 @@ class CovidDatabase(metaclass=Singleton):
         return await self._api_client.get_district_cases_history(district_id, days)
 
     @cache("*:60:00")
-    async def german_history(self, days: int = 42):
+    async def get_german_incidence_history(self, days: int = 42) -> HistoryGermanIncidenceResponse:
         return await self._api_client.get_german_history(days)
 
     @cache("*:60:00")
@@ -78,8 +79,12 @@ class CovidDatabase(metaclass=Singleton):
         return return_list
 
     @cache("*:60:00")
-    async def get_incidence_plot(self, district_id: str, days: int = 42) -> bytes:
-        district_history = await self.get_district_incidence_history(district_id, days)
+    async def get_incidence_plot(self, district_id: str = None, days: int = 42) -> bytes:
+        if district_id:
+            district_history = await self.get_district_incidence_history(district_id, days)
+        else:
+            district_history = await self.get_german_incidence_history()
+
         incidence_list = list(map(lambda x: x.week_incidence, district_history.data))
         return self._generate_plot(incidence_list)
 
