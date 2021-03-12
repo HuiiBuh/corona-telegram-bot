@@ -68,7 +68,7 @@ async def show_subscriptions(query: CallbackQuery):
     buttons = InlineKeyboardMarkup()
 
     user = user_db.get_user(query.from_user.id)
-    district_list = await covid_db.get_ordered_district_by_id(user.districts)
+    district_list = await covid_db.get_ordered_district_by_ids(user.districts)
     for district in district_list:
         buttons.row(
             InlineKeyboardButton(district.name,

@@ -139,3 +139,4 @@ user_db.json
 cython_debug/
 out
 /test-snippets.py
+/test.py

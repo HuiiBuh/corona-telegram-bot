@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import Optional, Dict
+from typing import Optional, Union
 
 from aiohttp import ClientSession, TCPConnector, ClientTimeout, DummyCookieJar
 
 from helpers.singleton import Singleton
 from models.Districts import DistrictsResponse
 from models.Germany import GermanyResponse
+from models.History import GermanHistoryResponse, InternalHistoryDistrictCasesResponse, HistoryDistrictIncidenceResponse
 from models.States import StatesResponse
 from settings import SETTINGS
 
@@ -46,23 +47,35 @@ class ApiClient:
         return GermanyResponse(**response)
 
     async def get_district_map(self) -> bytes:
-        async with self._client_session.get(f"{self.base_url}map/districts") as request:
-            request.raise_for_status()
-            return await request.read()
+        return await self._get("map/districts")
 
-    async def _get(self, path: str) -> Dict:
+    async def get_district_cases_history(self, district_id: str, days: int) -> HistoryDistrictIncidenceResponse:
+        history = await self._get(f"districts/{district_id}/history/cases/{days}")
+        history_object = InternalHistoryDistrictCasesResponse(**history)
+        keys = list(history_object.data.keys())
+        data = history_object.data[keys[0]]
+        return HistoryDistrictIncidenceResponse(data=data.history, ags=data.ags, name=data.name)
+
+    async def get_district_incidence_history(self, district_id: str, days: int) -> HistoryDistrictIncidenceResponse:
+        history = await self._get(f"districts/{district_id}/history/incidence/{days}")
+        history_object = InternalHistoryDistrictCasesResponse(**history)
+        keys = list(history_object.data.keys())
+        data = history_object.data[keys[0]]
+        return HistoryDistrictIncidenceResponse(data=data.history, ags=data.ags, name=data.name)
+
+    async def get_german_history(self, days: int):
+        history = await self._get(f"germany/history/incidence/{days}")
+        return GermanHistoryResponse(**history)
+
+    async def _get(self, path: str) -> Union[dict, bytes]:
         if not self._client_session:
             raise Exception("You have to create a client session before you can use the api client")
 
-        async with self._client_session.get(f"{self.base_url}{path}") as request:
-            request.raise_for_status()
-            try:
-                json = await request.json()
-            except Exception as e:
-                request.close()
-                raise e
-
-            return json
+        async with self._client_session.get(f"{self.base_url}{path}", raise_for_status=True) as request:
+            if request.content_type == "application/json":
+                return await request.json()
+            else:
+                return await request.read()
 
     @staticmethod
     def create() -> ApiClient:

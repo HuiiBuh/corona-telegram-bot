@@ -25,7 +25,7 @@ async def send_district_update(user: User, scip_district_check=True):
                                                "Go into /settings to subscribe to districts you want information from "
                                                "or /start to see which commands are available.", ParseMode.MARKDOWN)
 
-    district_list = await covid_db.get_ordered_district_by_id(user.districts)
+    district_list = await covid_db.get_ordered_district_by_ids(user.districts)
     for district in district_list:
         await send_district(user, district)
 
@@ -36,24 +36,25 @@ async def send_district(user: User, district: Districts):
     - Cases per Hundred Thousand: _{round(district.cases_per100_k)}_
     - Week Incidence: _{round(district.week_incidence)}_
     """.replace("-", "\\-")
-    await bot.send_message(user.id, message, ParseMode.MARKDOWN_V2)
+    image = await covid_db.get_incidence_plot(district.ags)
+    await bot.send_photo(user.id, image, message, ParseMode.MARKDOWN_V2)
 
 
 async def send_country_update(user: User) -> None:
     prepare_message = await bot.send_message(user.id, "Preparing image...")
 
-    germany = await covid_db.germany
+    germany = await covid_db.germany()
     try:
-        covid_map = await covid_db.map
+        covid_map = await covid_db.map()
     except asyncio.exceptions.TimeoutError:
         covid_map = None
         pass
     message = f"""
     *Germany:*
-    - R-value: _{round(germany.r.value)}_
+    - R-value: _{round(germany.r.value, 3)}_
     - Cases per Hundred Thousand: _{round(germany.cases_per100_k)}_
     - Week Incidence: _{round(germany.week_incidence)}_
-    """.replace("-", "\\-")
+    """.replace("-", "\\-").replace(".", "\\.")
 
     if covid_map:
         await bot.send_photo(user.id, covid_map, message, ParseMode.MARKDOWN_V2)

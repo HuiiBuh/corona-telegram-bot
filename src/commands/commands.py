@@ -12,6 +12,11 @@ covid_db = CovidDatabase()
 settings_callback = CallbackData("settings", "setting", "data")
 
 
+async def test_command(message: types.Message):
+    image = await covid_db.get_incidence_plot("11007")
+    await message.bot.send_photo(message.chat.id, image)
+
+
 async def start(message: types.Message):
     user_db.create_if_not_exist(message.from_user.id)
     response = """

@@ -2,7 +2,7 @@ from aiogram.utils.callback_data import CallbackData
 
 from commands.callbacks import show_states, show_districts, add_district, show_subscriptions, remove_district, \
     close_settings
-from commands.commands import start, country, settings, district, update
+from commands.commands import start, country, settings, district, update, test_command
 from helpers.message_handler import register_message_handler, register_callback_handler
 
 message_handler_list = [
@@ -10,7 +10,8 @@ message_handler_list = [
     register_message_handler(country, commands=["country"]),
     register_message_handler(district, commands=["district"]),
     register_message_handler(update, commands=["update"]),
-    register_message_handler(settings, commands=["settings"])
+    register_message_handler(settings, commands=["settings"]),
+    register_message_handler(test_command, commands=["test"])
 ]
 
 settings_callback = CallbackData("settings", "setting", "data")
