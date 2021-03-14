@@ -128,7 +128,9 @@ class CovidDatabase(metaclass=Singleton):
         pyplot.ylabel("Vaccinations in million")
         pyplot.ylim(0, max(vaccination_list) * 2)
         pyplot.legend(loc="upper left")
-        return self._to_buffer(pyplot)
+        buffer = self._to_buffer(pyplot)
+        pyplot.close()
+        return buffer
 
     def _accumulate_list(self, l: Union[List[float], Iterator]) -> List[float]:
         new_list = []
