@@ -8,7 +8,8 @@ from helpers.singleton import Singleton
 from models.Districts import DistrictsResponse
 from models.Germany import GermanyResponse
 from models.History import HistoryGermanIncidenceResponse, InternalHistoryDistrictCasesResponse, \
-    HistoryDistrictIncidenceResponse, HistoryDistrictCasesResponse, InternalHistoryDistrictIncidenceResponse
+    HistoryDistrictIncidenceResponse, HistoryDistrictCasesResponse, InternalHistoryDistrictIncidenceResponse, \
+    VaccinationHistoryResponse
 from models.States import StatesResponse
 from settings import SETTINGS
 
@@ -67,6 +68,10 @@ class ApiClient:
     async def get_german_history(self, days: int) -> HistoryGermanIncidenceResponse:
         history = await self._get(f"germany/history/incidence/{days}")
         return HistoryGermanIncidenceResponse(**history)
+
+    async def get_vaccination_history(self) -> VaccinationHistoryResponse:
+        history = await self._get(f"vaccinations/history")
+        return VaccinationHistoryResponse(**history)
 
     async def _get(self, path: str) -> Union[dict, bytes]:
         if not self._client_session:

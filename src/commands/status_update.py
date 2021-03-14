@@ -60,9 +60,11 @@ async def send_country_update(user: User) -> None:
 
     media = MediaGroup()
 
-    graph = await covid_db.get_incidence_plot()
-    photo = InputMediaPhoto(BytesIO(graph), message, ParseMode.MARKDOWN_V2)
-    media.attach(photo)
+    incidence_graph = await covid_db.get_incidence_plot()
+    media.attach(InputMediaPhoto(BytesIO(incidence_graph), message, ParseMode.MARKDOWN_V2))
+
+    vaccinations_graph = await covid_db.get_vaccination_plot()
+    media.attach(InputMediaPhoto(BytesIO(vaccinations_graph)))
 
     if covid_map:
         media.attach_photo(InputMediaPhoto(BytesIO(covid_map)))

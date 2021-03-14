@@ -1,12 +1,14 @@
 import io
+from typing import List, Union, Iterator
 
 from matplotlib import pyplot
+from matplotlib.ticker import FuncFormatter
 
 from helpers.singleton import Singleton
 from models.Districts import DistrictsResponse, Districts
 from models.Germany import GermanyResponse
 from models.History import HistoryDistrictIncidenceResponse, HistoryDistrictCasesResponse, \
-    HistoryGermanIncidenceResponse
+    HistoryGermanIncidenceResponse, VaccinationHistoryResponse, VaccinationHistoryItem
 from models.States import StatesResponse, States
 from storage.cache import cache
 from .api_client import ApiClient
@@ -44,6 +46,10 @@ class CovidDatabase(metaclass=Singleton):
     @cache("*:60:00")
     async def get_german_incidence_history(self, days: int = 42) -> HistoryGermanIncidenceResponse:
         return await self._api_client.get_german_history(days)
+
+    @cache("*:60:00")
+    async def get_vaccination_history(self) -> VaccinationHistoryResponse:
+        return await self._api_client.get_vaccination_history()
 
     @cache("*:60:00")
     async def get_sorted_state_list(self) -> [States]:
@@ -88,8 +94,52 @@ class CovidDatabase(metaclass=Singleton):
         incidence_list = list(map(lambda x: x.week_incidence, district_history.data))
         return self._generate_plot(incidence_list)
 
-    def _generate_plot(self, y: [float], y_label="Incidence", x_label="Weeks", show_limits=True):
+    @cache("*:60:00")
+    async def calculate_r(self, district_id: str, generation_time=7) -> float:
+        district_history = (await self.get_district_cases_history(district_id))
+        district_history.data.reverse()
+        district_history = list(map(lambda x: x.cases, district_history.data))
 
+        # Ignore the last four days
+        relevant_data = district_history[4:]
+
+        new_infections = 0
+        old_infections = 0
+        for i in range(generation_time):
+            new_infections += relevant_data[i]
+            old_infections += relevant_data[i + generation_time]
+
+        return round(new_infections / old_infections, 2)
+
+    @cache("*:60:00")
+    async def get_vaccination_plot(self):
+        history_list: List[VaccinationHistoryItem] = (await self.get_vaccination_history()).data.history
+        vaccinated_list = self._accumulate_list(map(lambda item: item.vaccinated, history_list))
+        second_list = self._accumulate_list(map(lambda item: item.secondVaccination, history_list))
+        return self._generate_vaccination_plot(vaccinated_list, second_list)
+
+    def _generate_vaccination_plot(self, vaccination_list: List[float], second_vaccination_list: List[float]) -> bytes:
+        _, ax = pyplot.subplots()
+
+        ax.yaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{int(x / 1000000)}"))
+
+        pyplot.plot(vaccination_list, label="People with one vaccination")
+        pyplot.plot(second_vaccination_list, label="People with two vaccinations")
+        pyplot.ylabel("Vaccinations in million")
+        pyplot.ylim(0, max(vaccination_list) * 2)
+        pyplot.legend(loc="upper left")
+        return self._to_buffer(pyplot)
+
+    def _accumulate_list(self, l: Union[List[float], Iterator]) -> List[float]:
+        new_list = []
+        last_value = 0
+        for item in l:
+            new_list.append(item + last_value)
+            last_value = item + last_value
+
+        return new_list
+
+    def _generate_plot(self, y: [float], y_label="Incidence", x_label="Weeks", show_limits=True) -> bytes:
         x = []
         week_ticks = []
         for i in range(len(y)):
@@ -123,22 +173,6 @@ class CovidDatabase(metaclass=Singleton):
         plot.savefig(buf, format='png')
         buf.seek(0)
         return buf.read()
-
-    async def calculate_r(self, district_id: str, generation_time=7) -> float:
-        district_history = (await self.get_district_cases_history(district_id))
-        district_history.data.reverse()
-        district_history = list(map(lambda x: x.cases, district_history.data))
-
-        # Ignore the last four days
-        relevant_data = district_history[4:]
-
-        new_infections = 0
-        old_infections = 0
-        for i in range(generation_time):
-            new_infections += relevant_data[i]
-            old_infections += relevant_data[i + generation_time]
-
-        return round(new_infections / old_infections, 2)
 
     def initialize(self) -> None:
         self._api_client = ApiClient.create()

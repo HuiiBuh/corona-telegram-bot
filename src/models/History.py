@@ -56,3 +56,20 @@ class HistoryDistrictCasesResponse(BaseModel):
 class HistoryGermanIncidenceResponse(BaseModel):
     data: List[HistoryIncidenceItem]
     meta: Meta
+
+
+# Vaccination cases history
+class VaccinationHistoryItem(BaseModel):
+    date: datetime
+    vaccinated: int
+    firstVaccination: int
+    secondVaccination: float
+
+
+class VaccinationHistory(BaseModel):
+    history: List[VaccinationHistoryItem]
+
+
+class VaccinationHistoryResponse(BaseModel):
+    data: VaccinationHistory
+    meta: Meta
