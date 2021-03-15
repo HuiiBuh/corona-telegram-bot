@@ -8,7 +8,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - name Get git tag
+      - name: Get git tag
         id: git_tag
         run: |
           DOCKER_IMAGE=huiibuh/corona-germany-bot
