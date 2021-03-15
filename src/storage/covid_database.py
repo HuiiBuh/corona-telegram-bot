@@ -3,6 +3,7 @@ from typing import List, Union, Iterator
 
 from matplotlib import pyplot
 from matplotlib.ticker import FuncFormatter
+from pycache import cache
 
 from helpers.singleton import Singleton
 from models.Districts import DistrictsResponse, Districts
@@ -10,7 +11,6 @@ from models.Germany import GermanyResponse
 from models.History import HistoryDistrictIncidenceResponse, HistoryDistrictCasesResponse, \
     HistoryGermanIncidenceResponse, VaccinationHistoryResponse, VaccinationHistoryItem
 from models.States import StatesResponse, States
-from storage.cache import cache
 from .api_client import ApiClient
 
 
@@ -51,7 +51,6 @@ class CovidDatabase(metaclass=Singleton):
     async def get_vaccination_history(self) -> VaccinationHistoryResponse:
         return await self._api_client.get_vaccination_history()
 
-    @cache("*:60:00")
     async def get_sorted_state_list(self) -> [States]:
         states = (await self.states()).data
 
@@ -61,7 +60,6 @@ class CovidDatabase(metaclass=Singleton):
         return_list.sort(key=lambda s: s.name)
         return return_list
 
-    @cache("*:60:00")
     async def get_district_by_state_name(self, state_name: str) -> [Districts]:
         return_list = []
         for district in (await self.districts()).data.values():
@@ -73,7 +71,6 @@ class CovidDatabase(metaclass=Singleton):
     async def get_district_by_id(self, ags: str) -> Districts:
         return (await self.districts()).data[ags]
 
-    @cache("*:60:00")
     async def get_ordered_district_by_ids(self, ags_list: [str]) -> [Districts]:
         return_list = []
         district_dict = (await self.districts()).data
@@ -84,7 +81,6 @@ class CovidDatabase(metaclass=Singleton):
         return_list.sort(key=lambda k: k.name)
         return return_list
 
-    @cache("*:60:00")
     async def get_incidence_plot(self, district_id: str = None, days: int = 42) -> bytes:
         if district_id:
             district_history = await self.get_district_incidence_history(district_id, days)
@@ -92,9 +88,8 @@ class CovidDatabase(metaclass=Singleton):
             district_history = await self.get_german_incidence_history()
 
         incidence_list = list(map(lambda x: x.week_incidence, district_history.data))
-        return self._generate_plot(incidence_list)
+        return CovidDatabase._generate_plot(incidence_list)
 
-    @cache("*:60:00")
     async def calculate_r(self, district_id: str, generation_time=7) -> float:
         district_history = (await self.get_district_cases_history(district_id))
         district_history.data.reverse()
@@ -111,14 +106,14 @@ class CovidDatabase(metaclass=Singleton):
 
         return round(new_infections / old_infections, 2)
 
-    @cache("*:60:00")
     async def get_vaccination_plot(self):
         history_list: List[VaccinationHistoryItem] = (await self.get_vaccination_history()).data.history
-        vaccinated_list = self._accumulate_list(map(lambda item: item.vaccinated, history_list))
-        second_list = self._accumulate_list(map(lambda item: item.secondVaccination, history_list))
-        return self._generate_vaccination_plot(vaccinated_list, second_list)
+        vaccinated_list = CovidDatabase._accumulate_list(map(lambda item: item.vaccinated, history_list))
+        second_list = CovidDatabase._accumulate_list(map(lambda item: item.secondVaccination, history_list))
+        return CovidDatabase._generate_vaccination_plot(vaccinated_list, second_list)
 
-    def _generate_vaccination_plot(self, vaccination_list: List[float], second_vaccination_list: List[float]) -> bytes:
+    @staticmethod
+    def _generate_vaccination_plot(vaccination_list: List[float], second_vaccination_list: List[float]) -> bytes:
         _, ax = pyplot.subplots()
 
         ax.yaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{int(x / 1000000)}"))
@@ -128,20 +123,12 @@ class CovidDatabase(metaclass=Singleton):
         pyplot.ylabel("Vaccinations in million")
         pyplot.ylim(0, max(vaccination_list) * 2)
         pyplot.legend(loc="upper left")
-        buffer = self._to_buffer(pyplot)
+        buffer = CovidDatabase._to_buffer(pyplot)
         pyplot.close()
         return buffer
 
-    def _accumulate_list(self, l: Union[List[float], Iterator]) -> List[float]:
-        new_list = []
-        last_value = 0
-        for item in l:
-            new_list.append(item + last_value)
-            last_value = item + last_value
-
-        return new_list
-
-    def _generate_plot(self, y: [float], y_label="Incidence", x_label="Weeks", show_limits=True) -> bytes:
+    @staticmethod
+    def _generate_plot(y: [float], y_label="Incidence", x_label="Weeks", show_limits=True) -> bytes:
         x = []
         week_ticks = []
         for i in range(len(y)):
@@ -166,11 +153,22 @@ class CovidDatabase(metaclass=Singleton):
         pyplot.ylabel(y_label)
         pyplot.xlabel(x_label)
         pyplot.ylim(0, max(y) + 10)
-        buffer = self._to_buffer(pyplot)
+        buffer = CovidDatabase._to_buffer(pyplot)
         pyplot.close()
         return buffer
 
-    def _to_buffer(self, plot: pyplot) -> bytes:
+    @staticmethod
+    def _accumulate_list(old_list: Union[List[float], Iterator]) -> List[float]:
+        new_list = []
+        last_value = 0
+        for item in old_list:
+            new_list.append(item + last_value)
+            last_value = item + last_value
+
+        return new_list
+
+    @staticmethod
+    def _to_buffer(plot: pyplot) -> bytes:
         buf = io.BytesIO()
         plot.savefig(buf, format='png')
         buf.seek(0)

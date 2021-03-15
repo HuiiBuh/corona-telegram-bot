@@ -4,6 +4,7 @@ import json
 import os
 from copy import deepcopy
 from dataclasses import field
+from pathlib import Path
 from typing import Dict, Union, List
 
 from pydantic import BaseModel, Field
@@ -46,6 +47,8 @@ class UserDatabase(metaclass=Singleton):
         self.file_name: str = file_name
 
     def load(self, create_if_not_exist=True) -> None:
+        Path(SETTINGS.db_location).mkdir(parents=True, exist_ok=True)
+
         if not os.path.exists(self.file_name):
             if create_if_not_exist:
                 with open(self.file_name, "w") as file:

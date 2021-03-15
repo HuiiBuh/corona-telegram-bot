@@ -6,17 +6,33 @@ from commands import message_handler_list, callback_handler_list
 from globals import event_loop, initialize_database, dispatcher
 from settings import SETTINGS
 
-if SETTINGS.production:
-    logging.basicConfig(filename="logs/bot.log",
-                        format=u'%(filename)+13s [ LINE:%(lineno)-4s] %(levelname)-8s [%(asctime)s] %(message)s',
-                        level=logging.DEBUG)
-else:
-    logging.basicConfig(format=u'%(filename)+13s [ LINE:%(lineno)-4s] %(levelname)-8s [%(asctime)s] %(message)s',
-                        level=logging.INFO)
+formatter = logging.Formatter('%(filename)+13s [ LINE:%(lineno)-4s] %(levelname)-8s [%(asctime)s] %(message)s')
+
+
+def setup_logging():
+    # File logging
+    file_logger = logging.FileHandler("logs/bot.log")
+    file_logger.setFormatter(formatter)
+
+    # Console logging
+    console_logger = logging.StreamHandler()
+    console_logger.setFormatter(formatter)
+
+    logger = logging.getLogger()
+
+    if SETTINGS.production:
+        logger.addHandler(console_logger)
+        logger.addHandler(file_logger)
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.addHandler(console_logger)
+        logger.setLevel(logging.INFO)
+
 
 if __name__ == "__main__":
-    event_loop.run_until_complete(initialize_database())
+    setup_logging()
 
+    event_loop.run_until_complete(initialize_database())
     for handler in message_handler_list:
         dispatcher.register_message_handler(**handler)
 
