@@ -19,7 +19,10 @@ class ApiClient:
 
     def __init__(self, base_url: str, request_timeout: int, request_limit: int):
         self._timeout: ClientTimeout = ClientTimeout(total=request_timeout)
-        self._connector: TCPConnector = TCPConnector(limit=request_limit, enable_cleanup_closed=True)
+        self._connector: TCPConnector = TCPConnector(limit=request_limit,
+                                                     enable_cleanup_closed=True,
+                                                     verify_ssl=SETTINGS.verify_ssl
+                                                     )
         self._client_session: Optional[ClientSession] = None
         self.base_url: str = base_url
 
