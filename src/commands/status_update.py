@@ -12,14 +12,6 @@ user_db = UserDatabase.create()
 covid_db = CovidDatabase()
 
 
-async def send_status_update():
-    user_dict = user_db.get_all_users()
-
-    for user in user_dict.values():
-        await send_country_update(user)
-        await send_district_update(user)
-
-
 async def send_district_update(user: User, scip_district_check=True):
     if len(user.districts) == 0 and not scip_district_check:
         return await bot.send_message(user.id, "*You did not subscribe to any districts.*\n"
@@ -68,7 +60,7 @@ async def send_country_update(user: User) -> None:
 
     if covid_map:
         media.attach_photo(InputMediaPhoto(BytesIO(covid_map)))
-        await prepare_message.delete()
+        await bot.delete_message(prepare_message.chat.id, prepare_message.message_id)
     else:
         await prepare_message.edit_text("Could not collect the image")
 

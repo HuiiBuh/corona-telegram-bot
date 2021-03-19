@@ -1,8 +1,10 @@
 import logging
 
 from aiogram.utils import executor
+from pycache import add_schedule
 
 from commands import message_handler_list, callback_handler_list
+from commands.schedule import send_status_update
 from globals import event_loop, initialize_database, dispatcher
 from settings import SETTINGS
 
@@ -19,14 +21,13 @@ def setup_logging():
     console_logger.setFormatter(formatter)
 
     logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
 
     if SETTINGS.production:
         logger.addHandler(console_logger)
         logger.addHandler(file_logger)
-        logger.setLevel(logging.DEBUG)
     else:
         logger.addHandler(console_logger)
-        logger.setLevel(logging.INFO)
 
 
 if __name__ == "__main__":
@@ -39,4 +40,11 @@ if __name__ == "__main__":
     for handler in callback_handler_list:
         dispatcher.register_callback_query_handler(handler[0], *handler[1])
 
-    executor.start_polling(dispatcher)
+    schedule = add_schedule(send_status_update, call_at="18:15:01", event_loop=event_loop)
+
+
+    async def on_shutdown(_):
+        schedule.stop()
+
+
+    executor.start_polling(dispatcher, on_shutdown=on_shutdown)

@@ -88,7 +88,11 @@ class CovidDatabase(metaclass=Singleton):
             district_history = await self.get_german_incidence_history()
 
         incidence_list = list(map(lambda x: x.week_incidence, district_history.data))
-        return CovidDatabase._generate_plot(incidence_list)
+        if district_id:
+            district_name = (await self.get_district_by_id(district_id)).county
+        else:
+            district_name = "Germany"
+        return CovidDatabase._generate_plot(incidence_list, district_name)
 
     async def calculate_r(self, district_id: str, generation_time=7) -> float:
         district_history = (await self.get_district_cases_history(district_id))
@@ -128,7 +132,7 @@ class CovidDatabase(metaclass=Singleton):
         return buffer
 
     @staticmethod
-    def _generate_plot(y: [float], y_label="Incidence", x_label="Weeks", show_limits=True) -> bytes:
+    def _generate_plot(y: [float], plot_label: str, y_label="Incidence", x_label="Weeks", show_limits=True) -> bytes:
         x = []
         week_ticks = []
         for i in range(len(y)):
@@ -142,7 +146,7 @@ class CovidDatabase(metaclass=Singleton):
 
         pyplot.xticks(x, week_ticks)
 
-        pyplot.plot(x, y, color="black")
+        pyplot.plot(x, y, label=plot_label, color="black")
 
         if show_limits:
             pyplot.plot(x, [50] * len(y), color="#b9b922")
@@ -152,7 +156,8 @@ class CovidDatabase(metaclass=Singleton):
 
         pyplot.ylabel(y_label)
         pyplot.xlabel(x_label)
-        pyplot.ylim(0, max(y) + 10)
+        pyplot.ylim(0, max(y) + 20)
+        pyplot.legend(loc="upper left")
         buffer = CovidDatabase._to_buffer(pyplot)
         pyplot.close()
         return buffer

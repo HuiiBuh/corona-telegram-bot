@@ -83,6 +83,32 @@ async def show_subscriptions(query: CallbackQuery):
     await query.message.edit_text("Click on any of these districts to unsubscribe from them", reply_markup=buttons)
 
 
+async def show_notification(query: CallbackQuery):
+    user = user_db.get_user(query.from_user.id)
+    buttons = InlineKeyboardMarkup()
+    buttons.row(
+        InlineKeyboardButton("Disable notification" if user.notification_active else "Enable notification",
+                             callback_data=settings_callback.new("toggle_notification", data="None"))
+    )
+    buttons.row(
+        InlineKeyboardButton(
+            "Back", callback_data=settings_callback.new(setting="settings", data="None"))
+    )
+    await query.answer()
+    await query.message.edit_text(
+        "If you want daily notifications about the status enable this feature. Otherwise disable it.",
+        reply_markup=buttons)
+
+
+async def toggle_notification(query: CallbackQuery):
+    user = user_db.get_user(query.from_user.id)
+    user.notification_active = not user.notification_active
+    user_db.save()
+
+    await query.answer()
+    await show_notification(query)
+
+
 async def close_settings(query: CallbackQuery):
     await query.message.delete()
     await query.answer()
