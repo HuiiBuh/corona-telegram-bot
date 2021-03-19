@@ -40,7 +40,7 @@ if __name__ == "__main__":
     for handler in callback_handler_list:
         dispatcher.register_callback_query_handler(handler[0], *handler[1])
 
-    schedule = add_schedule(send_status_update, call_at="18:15:01", event_loop=event_loop)
+    schedule = add_schedule(send_status_update, call_at="08:00:00", event_loop=event_loop)
 
 
     async def on_shutdown(_):
