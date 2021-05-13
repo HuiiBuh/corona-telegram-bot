@@ -1,4 +1,5 @@
 import io
+import math
 from typing import List, Union, Iterator
 
 from matplotlib import pyplot
@@ -120,6 +121,12 @@ class CovidDatabase(metaclass=Singleton):
     def _generate_vaccination_plot(vaccination_list: List[float], second_vaccination_list: List[float]) -> bytes:
         _, ax = pyplot.subplots()
 
+        vacc_len = len(vaccination_list)
+        max_value = max([*vaccination_list, *second_vaccination_list])
+        ten_million = math.ceil(max_value / 10000000)
+        for i in range(1, ten_million + 1):
+            pyplot.plot([i * 10000000] * vacc_len, color="lightgray", linestyle="dotted")
+
         ax.yaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{int(x / 1000000)}"))
 
         pyplot.plot(vaccination_list, label="People with one vaccination")
@@ -149,10 +156,14 @@ class CovidDatabase(metaclass=Singleton):
         pyplot.plot(x, y, label=plot_label, color="black")
 
         if show_limits:
+            pyplot.plot(x, [35] * len(y), color="#92d930")
             pyplot.plot(x, [50] * len(y), color="#b9b922")
 
             if max(y) > 90:
                 pyplot.plot(x, [100] * len(y), color="lightcoral")
+
+            if max(y) > 170:
+                pyplot.plot(x, [200] * len(y), color="red")
 
         pyplot.ylabel(y_label)
         pyplot.xlabel(x_label)

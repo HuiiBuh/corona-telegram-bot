@@ -4,6 +4,7 @@ from aiogram import types
 from aiogram.types import ParseMode
 from aiogram.utils.callback_data import CallbackData
 
+from commands.helpers import get_states_keyboard
 from commands.status_update import send_country_update, send_district_update
 from storage import CovidDatabase, UserDatabase
 
@@ -18,6 +19,7 @@ async def start(message: types.Message):
     *Commands:*
     - /country Get status
     - /district Get status
+    - /get Get the status of one district
     - /update Get country and district
     - /settings Subscribe to districts
     """.replace("-", "\\-")
@@ -40,6 +42,15 @@ async def update(message: types.Message):
     await send_district_update(user)
 
 
+async def show_one_district(message: Union[types.Message, types.CallbackQuery]):
+    buttons = await get_states_keyboard("select_district", "close", "Close")
+    if isinstance(message, types.Message):
+        await message.answer("Select the state the district belongs to.", reply_markup=buttons)
+    elif isinstance(message, types.CallbackQuery):
+        await message.answer()
+        await message.message.edit_text("Select the state the district belongs to.", reply_markup=buttons)
+
+
 async def settings(message: Union[types.Message, types.CallbackQuery]):
     keyboard_markup = types.InlineKeyboardMarkup()
     keyboard_markup.row(
@@ -59,7 +70,7 @@ async def settings(message: Union[types.Message, types.CallbackQuery]):
     )
     keyboard_markup.row(
         types.InlineKeyboardButton("Close settings",
-                                   callback_data=settings_callback.new(setting="close_settings", data="None")),
+                                   callback_data=settings_callback.new(setting="close", data="None")),
     )
 
     if isinstance(message, types.Message):

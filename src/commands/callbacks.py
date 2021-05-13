@@ -1,6 +1,8 @@
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.callback_data import CallbackData
 
+from commands.helpers import get_states_keyboard, get_district_keyboard
+from commands.status_update import send_district
 from storage import UserDatabase, CovidDatabase
 
 user_db = UserDatabase.create()
@@ -9,38 +11,31 @@ settings_callback = CallbackData("settings", "setting", "data")
 
 
 async def show_states(query: CallbackQuery):
-    buttons = InlineKeyboardMarkup()
-    for state in await covid_db.get_sorted_state_list():
-        buttons.row(
-            InlineKeyboardButton(state.name,
-                                 callback_data=settings_callback.new(setting=f"show_districts", data=state.name))
-        )
-    buttons.row(
-        InlineKeyboardButton(
-            "Back", callback_data=settings_callback.new(setting="settings", data="None"))
-    )
+    buttons = await get_states_keyboard("show_districts", "settings")
     await query.answer()
-    await query.message.edit_text("Select the state the district you want to get get information about is in.",
+    await query.message.edit_text("Select the state the district belongs to",
                                   reply_markup=buttons)
 
 
 async def show_districts(query: CallbackQuery, callback_data: dict):
-    buttons = InlineKeyboardMarkup()
-
     state_name = callback_data["data"]
-    districts = await covid_db.get_district_by_state_name(state_name)
-
-    for district in districts:
-        buttons.row(
-            InlineKeyboardButton(
-                district.county, callback_data=settings_callback.new(setting="add_district", data=district.ags))
-        )
-    buttons.row(
-        InlineKeyboardButton(
-            "Back", callback_data=settings_callback.new(setting="show_states", data="None"))
-    )
+    buttons = await get_district_keyboard("add_district", state_name, "show_states")
     await query.answer()
     await query.message.edit_text("Select the district you want to get updates from.", reply_markup=buttons)
+
+
+async def select_district(query: CallbackQuery, callback_data: dict):
+    state_name = callback_data["data"]
+    buttons = await get_district_keyboard("show_district_graph", state_name, "show_one_district")
+    await query.answer()
+    await query.message.edit_text("Select the state the district belongs to", reply_markup=buttons)
+
+
+async def show_district_graph(query: CallbackQuery, callback_data: dict):
+    await query.answer()
+    district = await covid_db.get_district_by_id(callback_data["data"])
+    user = user_db.get_user(query.from_user.id)
+    await send_district(user, district)
 
 
 async def add_district(query: CallbackQuery, callback_data: dict):
@@ -109,6 +104,6 @@ async def toggle_notification(query: CallbackQuery):
     await show_notification(query)
 
 
-async def close_settings(query: CallbackQuery):
+async def close(query: CallbackQuery):
     await query.message.delete()
     await query.answer()
