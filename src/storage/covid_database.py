@@ -123,7 +123,7 @@ class CovidDatabase(metaclass=Singleton):
 
         vacc_len = len(vaccination_list)
         max_value = max([*vaccination_list, *second_vaccination_list])
-        ten_million = math.ceil(max_value / 10000000)
+        ten_million = max(math.ceil(max_value / 10000000), 4)
         for i in range(1, ten_million + 1):
             pyplot.plot([i * 10000000] * vacc_len, color="lightgray", linestyle="dotted")
 
@@ -132,7 +132,7 @@ class CovidDatabase(metaclass=Singleton):
         pyplot.plot(vaccination_list, label="People with one vaccination")
         pyplot.plot(second_vaccination_list, label="People with two vaccinations")
         pyplot.ylabel("Vaccinations in million")
-        pyplot.ylim(0, max(vaccination_list) * 2)
+        pyplot.ylim(0, max(vaccination_list) * 1.5)
         pyplot.legend(loc="upper left")
         buffer = CovidDatabase._to_buffer(pyplot)
         pyplot.close()
@@ -156,14 +156,14 @@ class CovidDatabase(metaclass=Singleton):
         pyplot.plot(x, y, label=plot_label, color="black")
 
         if show_limits:
-            pyplot.plot(x, [35] * len(y), color="#92d930")
-            pyplot.plot(x, [50] * len(y), color="#b9b922")
+            pyplot.plot(x, [35] * len(y), color="#92d930", linestyle="dotted")
+            pyplot.plot(x, [50] * len(y), color="#b9b922", linestyle="dotted")
 
             if max(y) > 90:
-                pyplot.plot(x, [100] * len(y), color="lightcoral")
+                pyplot.plot(x, [100] * len(y), color="lightcoral", linestyle="dotted")
 
             if max(y) > 170:
-                pyplot.plot(x, [200] * len(y), color="red")
+                pyplot.plot(x, [200] * len(y), color="red", linestyle="dotted")
 
         pyplot.ylabel(y_label)
         pyplot.xlabel(x_label)

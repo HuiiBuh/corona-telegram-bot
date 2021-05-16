@@ -88,6 +88,6 @@ class ApiClient:
 
     @staticmethod
     def create() -> ApiClient:
-        client = ApiClient(SETTINGS.covid_api_url, request_timeout=20, request_limit=100)
+        client = ApiClient(SETTINGS.covid_api_url, request_timeout=10, request_limit=100)
         client.create_client()
         return client

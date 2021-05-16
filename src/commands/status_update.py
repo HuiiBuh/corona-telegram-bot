@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from io import BytesIO
 
 from aiogram.types import ParseMode, MediaGroup, InputMediaPhoto
@@ -52,8 +53,11 @@ async def send_country_update(user: User) -> None:
 
     media = MediaGroup()
 
-    incidence_graph = await covid_db.get_incidence_plot()
-    media.attach(InputMediaPhoto(BytesIO(incidence_graph), message, ParseMode.MARKDOWN_V2))
+    try:
+        incidence_graph = await covid_db.get_incidence_plot()
+        media.attach(InputMediaPhoto(BytesIO(incidence_graph), message, ParseMode.MARKDOWN_V2))
+    except Exception as e:
+        logging.log(logging.WARNING, str(e))
 
     vaccinations_graph = await covid_db.get_vaccination_plot()
     media.attach(InputMediaPhoto(BytesIO(vaccinations_graph)))
