@@ -3,6 +3,7 @@ import logging
 from io import BytesIO
 
 from aiogram.types import ParseMode, MediaGroup, InputMediaPhoto
+from pydantic import ValidationError
 
 from globals import bot
 from models.Districts import Districts
@@ -43,13 +44,17 @@ async def send_country_update(user: User) -> None:
     except asyncio.exceptions.TimeoutError:
         covid_map = None
 
-    germany = await covid_db.germany()
-    message = f"""
-    *Germany:*
-    - R-value: _{round(germany.r.value, 2)}_
-    - Cases per Hundred Thousand: _{round(germany.cases_per100_k)}_
-    - Week Incidence: _{round(germany.week_incidence)}_
-    """.replace("-", "\\-").replace(".", "\\.")
+    try:
+        germany = await covid_db.germany()
+        message = f"""
+        *Germany:*
+        - R-value: _{round(germany.r.r_value_7_days.value, 2)}_
+        - Cases per Hundred Thousand: _{round(germany.cases_per100_k)}_
+        - Week Incidence: _{round(germany.week_incidence)}_
+        """.replace("-", "\\-").replace(".", "\\.")
+    except ValidationError as e:
+        message = "Looks like the RKI fucked up again and does not keep their datamodel consistent"
+        logging.warning(e)
 
     media = MediaGroup()
 

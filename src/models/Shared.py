@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -17,6 +18,13 @@ class Meta(BaseModel):
     last_checked_for_update: datetime = Field(alias="lastCheckedForUpdate")
 
 
-class R(BaseModel):
-    value: float
+class DateValue(BaseModel):
     date: datetime
+    value: Optional[float]
+
+
+class R(BaseModel):
+    value: Optional[float]
+    date: datetime
+    r_value_4_days: DateValue = Field(alias="rValue4Days")
+    r_value_7_days: DateValue = Field(alias="rValue7Days")
