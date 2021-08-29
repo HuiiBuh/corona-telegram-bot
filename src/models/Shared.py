@@ -25,6 +25,6 @@ class DateValue(BaseModel):
 
 class R(BaseModel):
     value: Optional[float]
-    date: datetime
+    date: Optional[datetime]
     r_value_4_days: DateValue = Field(alias="rValue4Days")
     r_value_7_days: DateValue = Field(alias="rValue7Days")

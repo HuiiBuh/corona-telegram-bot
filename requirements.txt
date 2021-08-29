@@ -1,4 +1,4 @@
-aiogram==2.12
-pydantic==1.8.1
-matplotlib==3.3.4
+aiogram==2.14.3
+pydantic==1.8.2
+matplotlib==3.4.3
 py-cache==0.3.2
